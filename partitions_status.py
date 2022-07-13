@@ -16,9 +16,11 @@ polygon_galicja = gdf_galicja['geometry'][0]
 polygon_all = gdf_all['geometry'][0]
 
 
+
+
 def transform_pnt(longitude: float, latitude: float) -> Point:
     raw_pnt = Point(longitude, latitude)
-    transformed_pnt = (transform(Proj(init='epsg:4326'), Proj(init='epsg:3857'), longitude, latitude))  # longitude first, latitude second.
+    transformed_pnt = (transform(Proj(init='epsg:4326'), Proj(init='epsg:3857'), longitude, latitude))
     return Point(transformed_pnt)
 
 def check_place_status(longitude: float, latitude: float) -> str:
@@ -35,6 +37,6 @@ def check_place_status(longitude: float, latitude: float) -> str:
 
 
 
-print(check_place_status(20.233, 53.844))
 
+#print(check_place_status(20.233, 53.844))
 
