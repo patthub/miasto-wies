@@ -1,14 +1,17 @@
 import geopandas as gpd
-import gdal
+# import gdal
 from shapely.geometry import Point, Polygon
 from pyproj import Proj, transform
 import geopy.distance
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
+warnings.simplefilter(action='ignore', category=DeprecationWarning)
 
 
 
-gdf_galicja = gpd.read_file("/home/patryk/Pulpit/miasto_wies/miasto-wies/galicja_mercator.shp")
-gdf_prusy = gpd.read_file("/home/patryk/Pulpit/miasto_wies/miasto-wies/prusy_mercator.shp")
-gdf_all = gpd.read_file("/home/patryk/Pulpit/miasto_wies/miasto-wies/zabory_all_mercator.shp")
+gdf_galicja = gpd.read_file("galicja_mercator.shp")
+gdf_prusy = gpd.read_file("prusy_mercator.shp")
+gdf_all = gpd.read_file("zabory_all_mercator.shp")
 
 
 polygon_prusy = gdf_prusy['geometry'][0]
