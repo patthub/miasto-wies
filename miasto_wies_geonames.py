@@ -67,12 +67,14 @@ for file in tqdm(files):
         test_file = json.load(f)
     test_file = [e for e in test_file if e['type'] in ['nam_loc_gpe_city', 'nam_loc']]
     origin_set = [' '.join(e['lemmas']) for e in test_file]
-    simple_set = set([' '.join([f.replace('.','').lower().strip('-').strip('–').strip(': ').strip('+').strip(', ').strip('.').strip() for f in e['lemmas']]) for e in test_file])
+    simple_set = list(set([' '.join([f.replace('.','').lower().strip('-').strip('–').strip(': ').strip('+').strip(', ').strip('.').strip() for f in e['lemmas']]) for e in test_file]))
     # origin_set = [e['polem'] for e in test_file]
     # simple_set = set([e.lower() for e in origin_set])
     files_dict[file_name] = {'origin': origin_set,
                              'simple': simple_set}
 
+with open('miejscowosci_dict.json', 'w') as f:
+    json.dump(files_dict, f)
 
 unique_geo_entities = [files_dict[e]['simple'] for e in files_dict]
 unique_geo_entities = list([e for e in set.union(*unique_geo_entities) if e])
@@ -154,7 +156,8 @@ with open('miejscowosci_total.json', 'w') as f:
 # rejestry_full = {k:set(v) for k,v in rejestry_full.items()}
 # {k:v.add(k) for k,v in rejestry_full.items()}
 
-miejscowosci_total_filtered = {k:[e for e in v if any(k == f for f in e[-1])] for k,v in miejscowosci_total.items()}
+miejscowosci_total_filtered = {k:[e for e in v if any(k == f.lower() for f in e[-1])] for k,v in miejscowosci_total.items()}
+miejscowosci_total_filtered = {k:v for k,v in miejscowosci_total_filtered.items() if v}
 
 with open('miejscowosci_total_filtered.json', 'w') as f:
     json.dump(miejscowosci_total_filtered, f)

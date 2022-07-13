@@ -1,5 +1,5 @@
 import geopandas as gpd
-import gdal
+# import gdal
 from shapely.geometry import Point, Polygon
 from pyproj import Proj, transform
 from geopy.distance import geodesic as GD
