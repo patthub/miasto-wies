@@ -9,6 +9,7 @@ import glob
 from geonames_accounts import geonames_users
 import random
 import time
+from datetime import datetime
 
 #%%
 
@@ -66,21 +67,21 @@ for file in tqdm(files):
     with open(f'C:/Users/Cezary/Documents/miasto-wies/korpus_1000/{file}', encoding='utf8') as f:
         test_file = json.load(f)
     test_file = [e for e in test_file if e['type'] in ['nam_loc_gpe_city', 'nam_loc']]
-    origin_set = [' '.join(e['lemmas']) for e in test_file]
-    simple_set = list(set([' '.join([f.replace('.','').lower().strip('-').strip('–').strip(': ').strip('+').strip(', ').strip('.').strip() for f in e['lemmas']]) for e in test_file]))
-    # origin_set = [e['polem'] for e in test_file]
-    # simple_set = set([e.lower() for e in origin_set])
+    # origin_set = [' '.join(e['lemmas']) for e in test_file]
+    # simple_set = list(set([' '.join([f.replace('.','').lower().strip('-').strip('–').strip(': ').strip('+').strip(', ').strip('.').strip() for f in e['lemmas']]) for e in test_file]))
+    origin_set = [e['polem'] for e in test_file]
+    simple_set = [e.lower() for e in origin_set]
     files_dict[file_name] = {'origin': origin_set,
                              'simple': simple_set}
 
-with open('miejscowosci_dict.json', 'w') as f:
+with open(f'miejscowosci_dict_{datetime.now().date()}.json', 'w') as f:
     json.dump(files_dict, f)
 
-unique_geo_entities = [files_dict[e]['simple'] for e in files_dict]
+unique_geo_entities = [set(files_dict[e]['simple']) for e in files_dict]
 unique_geo_entities = list([e for e in set.union(*unique_geo_entities) if e])
-
-n = 10000
-final = [unique_geo_entities[i * n:(i + 1) * n] for i in range((len(unique_geo_entities) + n - 1) // n )]
+#23794
+# n = 10000
+# final = [unique_geo_entities[i * n:(i + 1) * n] for i in range((len(unique_geo_entities) + n - 1) // n )]
 
 #%% get main name
 # rejestry_full = {k:set(v) for k,v in rejestry_full.items()}
@@ -94,7 +95,7 @@ final = [unique_geo_entities[i * n:(i + 1) * n] for i in range((len(unique_geo_e
 #%% geonames query
 
 # miejscowosci = ['Żmudź', 'Wodokty', 'Lubicz', 'Upita', 'Kiejdany', 'Taurogi', 'Adamów', 'Jadaromin']
-miejscowosci = final[1]
+# miejscowosci = final[1]
 # miejscowosci = final[1]
 # miejscowosci = final[2]
 
@@ -144,7 +145,7 @@ miejscowosci_total = {}
 with ThreadPoolExecutor() as excecutor:
     list(tqdm(excecutor.map(query_geonames, miejscowosci),total=len(miejscowosci)))
     
-with open('miejscowosci_total.json', 'w') as f:
+with open(f'miejscowosci_total_{datetime.now().date()}.json', 'w') as f:
     json.dump(miejscowosci_total, f)
     
 # miejscowosci.index(list(miejscowosci_total.keys())[-1])
@@ -159,8 +160,10 @@ with open('miejscowosci_total.json', 'w') as f:
 miejscowosci_total_filtered = {k:[e for e in v if any(k == f.lower() for f in e[-1])] for k,v in miejscowosci_total.items()}
 miejscowosci_total_filtered = {k:v for k,v in miejscowosci_total_filtered.items() if v}
 
-with open('miejscowosci_total_filtered.json', 'w') as f:
+with open(f'miejscowosci_total_filtered_{datetime.now().date()}.json', 'w') as f:
     json.dump(miejscowosci_total_filtered, f)
+
+
 
 
 # v = miejscowosci_total['Lubicz']
