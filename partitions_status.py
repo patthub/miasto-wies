@@ -35,9 +35,13 @@ def check_place_status(longitude: float, latitude: float) -> str:
     elif polygon_all.contains(pnt):
         return "Zabór: Rosja"
     else:
-        return "Miejsce poza zaborami Polski"
+        return "Zagranica"
 
-    
+def check_if_poland(longitude: float, latitude: float) -> bool:
+    pnt = transform_pnt(longitude, latitude)
+    if any([polygon_prusy.contains(pnt), polygon_galicja.contains(pnt), polygon_all.contains(pnt)]):
+        return True
+    else: return False    
     
     
 def get_mean_of_points(points: list) -> float:
