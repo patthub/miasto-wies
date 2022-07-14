@@ -58,23 +58,29 @@ from datetime import datetime
 
 #%% download NLP file
 path = r'C:\Users\Cezary\Documents\miasto-wies\korpus_1000/'
+path = r'C:\Users\Cezary\Documents\miasto-wies\korpus_1000_uzupełnienia/'
 files = [f.split('\\')[-1] for f in glob.glob(path + '*.polem', recursive=True)]
+files = [f.split('\\')[-1] for f in glob.glob(path + '*.alt', recursive=True)]
 
 files_dict = {}
 for file in tqdm(files):
     # file=files[0]
     file_name = file.split('.')[0]
-    with open(f'C:/Users/Cezary/Documents/miasto-wies/korpus_1000/{file}', encoding='utf8') as f:
+    # with open(f'C:/Users/Cezary/Documents/miasto-wies/korpus_1000/{file}', encoding='utf8') as f:
+    #     test_file = json.load(f)
+    with open(f'C:/Users/Cezary/Documents/miasto-wies/korpus_1000_uzupełnienia/{file}', encoding='utf8') as f:
         test_file = json.load(f)
     test_file = [e for e in test_file if e['type'] in ['nam_loc_gpe_city', 'nam_loc']]
     # origin_set = [' '.join(e['lemmas']) for e in test_file]
     # simple_set = list(set([' '.join([f.replace('.','').lower().strip('-').strip('–').strip(': ').strip('+').strip(', ').strip('.').strip() for f in e['lemmas']]) for e in test_file]))
-    origin_set = [e['polem'] for e in test_file]
+    # origin_set = [e['polem'] for e in test_file]
+    
+    origin_set = [e['polem'] if any(f in e['polem'] for f in [' ']) else e['lemmas'][0] for e in test_file]
     simple_set = [e.lower() for e in origin_set]
     files_dict[file_name] = {'origin': origin_set,
                              'simple': simple_set}
 
-with open(f'miejscowosci_dict_{datetime.now().date()}.json', 'w') as f:
+with open(f'miejscowosci_dict_uzupełnienie_{datetime.now().date()}.json', 'w') as f:
     json.dump(files_dict, f)
 
 unique_geo_entities = [set(files_dict[e]['simple']) for e in files_dict]
@@ -82,6 +88,19 @@ unique_geo_entities = list([e for e in set.union(*unique_geo_entities) if e])
 #23794
 # n = 10000
 # final = [unique_geo_entities[i * n:(i + 1) * n] for i in range((len(unique_geo_entities) + n - 1) // n )]
+
+#%%
+
+with open('miejscowosci_total_filtered_2022-07-14.json', 'r', encoding='utf-8') as f:
+    polem_based = json.load(f)
+with open('miejscowosci_dict_2022-07-14.json', 'r', encoding='utf-8') as f:
+    polem_based_dict = json.load(f)
+
+with open('miejscowosci_total_filtered.json', 'r', encoding='utf-8') as f:
+    lemmas_based = json.load(f)
+with open('miejscowosci_dict.json', 'r', encoding='utf-8') as f:
+    lemmas_based_dict = json.load(f)
+    
 
 #%% get main name
 # rejestry_full = {k:set(v) for k,v in rejestry_full.items()}
@@ -145,7 +164,7 @@ miejscowosci_total = {}
 with ThreadPoolExecutor() as excecutor:
     list(tqdm(excecutor.map(query_geonames, miejscowosci),total=len(miejscowosci)))
     
-with open(f'miejscowosci_total_{datetime.now().date()}.json', 'w') as f:
+with open(f'miejscowosci_total_uzupełnienie_{datetime.now().date()}.json', 'w') as f:
     json.dump(miejscowosci_total, f)
     
 # miejscowosci.index(list(miejscowosci_total.keys())[-1])
@@ -160,9 +179,99 @@ with open(f'miejscowosci_total_{datetime.now().date()}.json', 'w') as f:
 miejscowosci_total_filtered = {k:[e for e in v if any(k == f.lower() for f in e[-1])] for k,v in miejscowosci_total.items()}
 miejscowosci_total_filtered = {k:v for k,v in miejscowosci_total_filtered.items() if v}
 
-with open(f'miejscowosci_total_filtered_{datetime.now().date()}.json', 'w') as f:
+with open(f'miejscowosci_total_filtered_uzupełnienie_{datetime.now().date()}.json', 'w') as f:
     json.dump(miejscowosci_total_filtered, f)
 
+#%% łączenie zbiorów
+
+with open('miejscowosci_total_filtered_2022-07-14.json', 'r', encoding='utf-8') as f:
+    polem_based = json.load(f)
+with open('miejscowosci_dict_2022-07-14.json', 'r', encoding='utf-8') as f:
+    polem_based_dict = json.load(f)
+
+with open('miejscowosci_total_filtered.json', 'r', encoding='utf-8') as f:
+    lemmas_based = json.load(f)
+with open('miejscowosci_dict.json', 'r', encoding='utf-8') as f:
+    lemmas_based_dict = json.load(f)
+    
+with open('miejscowosci_total_filtered_uzupełnienie_2022-07-14.json', 'r', encoding='utf-8') as f:
+    supplement_based = json.load(f)
+with open('miejscowosci_dict_uzupełnienie_2022-07-14.json', 'r', encoding='utf-8') as f:
+    supplement_based_dict = json.load(f)
+
+supplement_ids = [f.split('\\')[-1] for f in glob.glob(r'C:\Users\Cezary\Documents\miasto-wies\korpus_1000_uzupełnienia/' + '*.alt', recursive=True)]
+supplement_ids = [e.split('.')[0] for e in supplement_ids]
+
+path = r'C:\Users\Cezary\Documents\miasto-wies\korpus_1000/'
+files = [f.split('\\')[-1] for f in glob.glob(path + '*.alt', recursive=True)]
+
+
+no_of_ners = 0
+no_of_ners_with_geonames = 0
+files_dict = {}
+for file in tqdm(files):
+    # file=files[0]
+    # file = supplement_ids[0] + '.iob.json.polem.alt'
+    file_name = file.split('.')[0]
+    with open(f'C:/Users/Cezary/Documents/miasto-wies/korpus_1000/{file}', encoding='utf8') as f:
+        test_file = json.load(f)
+    test_file = [e for e in test_file if e['type'] in ['nam_loc_gpe_city', 'nam_loc']]   
+    if file_name in supplement_ids:
+        test_dict = supplement_based_dict[file_name]
+        for i, d in enumerate(test_file):
+            # i = 0
+            # d = test_file[i]
+            test_file[i].update({'geonames': supplement_based[test_dict['simple'][i]] if test_dict['simple'][i] in supplement_based else np.nan})
+    else:
+        for i, d in enumerate(test_file):
+            # i = 65
+            # d = test_file[i]
+            if ' ' in d['polem']:
+                test_dict = polem_based_dict[file_name]
+                test_file[i].update({'geonames': polem_based[test_dict['simple'][i]] if test_dict['simple'][i] in polem_based else np.nan})
+            else:
+                test_dict = lemmas_based_dict[file_name]
+                try:
+                    test_file[i].update({'geonames': lemmas_based[d['lemmas'][0].replace('.','').lower().strip('-').strip('–').strip(': ').strip('+').strip(', ').strip('.').strip()]})
+                except KeyError:
+                    test_file[i].update({'geonames': np.nan})
+    no_of_ners += len(test_file)
+    test_file = [e for e in test_file if not isinstance(e['geonames'], float)]
+    no_of_ners_with_geonames += len(test_file)
+    with open(f"C:/Users/Cezary/Documents/miasto-wies/korpus_1000_final/{file}", 'w', encoding='utf-8') as file:
+        json.dump(test_file, file)
+
+print(no_of_ners)
+print(no_of_ners_with_geonames)    
+                
+
+with open(r"C:\Users\Cezary\Documents\miasto-wies\korpus_1000_final\pl-10072489.iob.json.polem.alt", 'r', encoding='utf-8') as f:
+    test = json.load(f)
+
+            
+        
+        
+        
+    
+    for d in test_file:
+        d = test_file[0]
+        if ' ' in d['polem']:
+            
+            
+        
+        
+        
+        
+    
+    # origin_set = [' '.join(e['lemmas']) for e in test_file]
+    # simple_set = list(set([' '.join([f.replace('.','').lower().strip('-').strip('–').strip(': ').strip('+').strip(', ').strip('.').strip() for f in e['lemmas']]) for e in test_file]))
+    # origin_set = [e['polem'] for e in test_file]
+    
+    origin_set = [e['polem'] if any(f in e['polem'] for f in [' ']) else e['lemmas'][0] for e in test_file]
+    simple_set = [e.lower() for e in origin_set]
+    files_dict[file_name] = {'origin': origin_set,
+                             'simple': simple_set}
+    
 
 
 
