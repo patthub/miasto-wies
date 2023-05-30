@@ -46,20 +46,20 @@ def check_if_poland(longitude: float, latitude: float) -> bool:
     
 def get_mean_of_points(points: list) -> float:
 
-  sum_long = 0
-  sum_lat = 0
-  mean_long = 0
-  mean_lat = 0
-  length = len(points)
-
-  for elem in points:
-    sum_long += elem[0]
-    sum_lat += elem[1]
+    sum_long = 0
+    sum_lat = 0
+    mean_long = 0
+    mean_lat = 0
+    length = len(points)
     
-  mean_long = sum_long / length
-  mean_lat = sum_lat / length
-
-  return (mean_long, mean_lat)
+    for elem in points:
+        sum_long += elem[0]
+        sum_lat += elem[1]
+      
+    mean_long = sum_long / length
+    mean_lat = sum_lat / length
+    
+    return (mean_long, mean_lat)
 
 
 from math import cos, asin, sqrt
