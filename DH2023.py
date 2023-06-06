@@ -1,3 +1,5 @@
+import sys
+sys.path.insert(1, 'C:/Users/Cezary/Documents/IBL-PAN-Python')
 from my_functions import gsheet_to_df
 import pandas as pd
 from ast import literal_eval
@@ -64,7 +66,7 @@ jsons = {'dh2023_books': books_json,
 
 for k, v in jsons.items():
     with open(f'{k}.json', 'w') as f:
-        json.dump(v, f)
+        json.dump(v, f, ensure_ascii=False)
 
 #mapowanie na ontologię --> z PH
 ontology_columns = {'lp', 
