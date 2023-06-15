@@ -10,6 +10,8 @@ from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from tqdm import tqdm
 import requests
+import time
+import numpy as np
 
 #%% def
 def wikidata_simple_dict_resp(results):
@@ -22,8 +24,8 @@ def wikidata_simple_dict_resp(results):
     dd = {k:list([dict((x,y) for x,y in e) for e in v]) for k,v in dd.items()}
     return dd
 
-# def query_wikidata_place_with_geoname(geoname_id):
-for geoname_id in tqdm(geoname_ids):
+def query_wikidata_place_with_geoname(geoname_id):
+# for geoname_id in tqdm(geoname_ids):
     # geoname_id = 498817
     user_agent = "WDQS-example Python/%s.%s" % (sys.version_info[0], sys.version_info[1])
     sparql = SPARQLWrapper("https://query.wikidata.org/sparql", agent=user_agent)
@@ -59,7 +61,7 @@ def get_wikidata_for_geonameId(wikidata_id):
     except TypeError:
         wiki_geo[wikidata_id] = None
 
-#%% main
+#%% load
 
 podkorpus_1000 = gsheet_to_df('17OHdiMqtfzPSzkeyPHcCzdGY8gOhek3bhv1zKjs9CCc', 'Podkorpus 1000')
 korpus_roboczy = gsheet_to_df('17OHdiMqtfzPSzkeyPHcCzdGY8gOhek3bhv1zKjs9CCc', 'korpus roboczy')
@@ -77,7 +79,7 @@ df = pd.merge(podkorpus_1000, ostateczna_deduplikacja, on='lp', how='left')
 
 #dopytać Agnieszkę --> czy CZY ISTNIEJE W JEDNYM Z NICH jest potrzebne, czy brać coś z korpusu roboczego?
 
-
+#%% main
 
 books = df[['lp', 'creator', 'title', 'epoka', 'liczba wznowień', 'ELTeC', 'year', 'num_tokens', 'geonames']]
 
@@ -90,7 +92,7 @@ books.index = books['id']
 books_json = books.to_dict(orient='index')
 books_json = {k:{ka:[e.get('geonameId') for e in literal_eval(va)] if ka == 'geonames' else va for ka,va in v.items()} for k,v in books_json.items()}
 
-people = df[['creator', 'gender', 'creator_wikidata']].drop_duplicates().reset_index(drop=True)
+people = df[['creator', 'gender', 'creator_wikidata']].drop_duplicates().reset_index(drop=True).rename(columns={'creator': 'name'})
 
 length = people.shape[0] + length
 for i, row in people.iterrows():
@@ -157,8 +159,9 @@ with ThreadPoolExecutor() as executor:
 test2['geonameId'] = test2['wikidataId'].apply(lambda x: wiki_geo.get(x))
 
 places = pd.concat([test, test2]).reset_index(drop=True)
-places = places.groupby('wikidataId').head(1)
-places['zabór'] = places['geonameId'].apply(lambda x: geo_zabor_dict.get(x))
+places = places.groupby('wikidataId').head(1).reset_index(drop=True)
+places['partition'] = places['geonameId'].apply(lambda x: geo_zabor_dict.get(x))
+places['geonameId'] = places['geonameId'].apply(lambda x: str(x) if x else x)
 
 length = places.shape[0] + length
 for i, row in places.iterrows():
@@ -171,13 +174,11 @@ places_json = {k:{ka:int(va) if ka == 'geonameId' and va else va for ka,va in v.
 
 #łączenie zbiorów
 places_with_geonames = {v.get('geonameId'):k for k,v in places_json.items() if v.get('geonameId')}
-people_to_join = {v.get('creator'):k for k,v in people_json.items()}
+people_to_join = {v.get('name'):k for k,v in people_json.items()}
 
 books_json = {k:{ka:people_to_join.get(va) if ka == 'creator' else va for ka,va in v.items()} for k,v in books_json.items()}
 for k,v in books_json.items():
-    v.update({'publishing place': [places_with_geonames.get('e') for e in v.get('geonames')]})
-#tutaj!!!!!!!!!!!!
-
+    v.update({'publishing place': [places_with_geonames.get(e) for e in v.get('geonames')]})
 
 jsons = {'dh2023_books': books_json,
          'dh2023_people': people_json,
