@@ -89,16 +89,27 @@ for l in range(1, length+1):
 
 books.index = books['id']
 
+literary_epochs = {'DM': 'https://www.wikidata.org/wiki/Q11761904',
+                   'MP': 'https://www.wikidata.org/wiki/Q1133329',
+                   'P': 'https://www.wikidata.org/wiki/Q131015'}
+
+books['epoka'] = books['epoka'].apply(lambda x: literary_epochs.get(x))
+
 books_json = books.to_dict(orient='index')
 books_json = {k:{ka:[e.get('geonameId') for e in literal_eval(va)] if ka == 'geonames' else va for ka,va in v.items()} for k,v in books_json.items()}
 
-people = df[['creator', 'gender', 'creator_wikidata']].drop_duplicates().reset_index(drop=True).rename(columns={'creator': 'name'})
+people = df[['creator', 'gender', 'creator_wikidata']].drop_duplicates().reset_index(drop=True).rename(columns={'creator': 'name', 'creator_wikidata': 'wikidata'})
 
 length = people.shape[0] + length
 for i, row in people.iterrows():
     people.at[i, 'id'] =  f'metapnc_p_{range(1001, length+1)[i]}'
 
 people.index = people['id']
+
+gender_dict = {'M': 'male',
+            'K': 'female'}
+
+people['gender'] = people['gender'].apply(lambda x: gender_dict.get(x))
 
 people_json = people.to_dict(orient='index')
 
@@ -163,6 +174,12 @@ places = places.groupby('wikidataId').head(1).reset_index(drop=True)
 places['partition'] = places['geonameId'].apply(lambda x: geo_zabor_dict.get(x))
 places['geonameId'] = places['geonameId'].apply(lambda x: str(x) if x else x)
 
+partition_dict = {'austriacki': 'https://www.wikidata.org/wiki/Q129794', 
+                  'pruski': 'https://www.wikidata.org/wiki/Q129791', 
+                  'rosyjski': 'https://www.wikidata.org/wiki/Q129797'}
+
+places['partition'] = places['partition'].apply(lambda x: partition_dict.get(x))
+
 length = places.shape[0] + length
 for i, row in places.iterrows():
     places.at[i, 'id'] =  f'metapnc_g_{range(1391, length+1)[i]}'
@@ -179,6 +196,8 @@ people_to_join = {v.get('name'):k for k,v in people_json.items()}
 books_json = {k:{ka:people_to_join.get(va) if ka == 'creator' else va for ka,va in v.items()} for k,v in books_json.items()}
 for k,v in books_json.items():
     v.update({'publishing place': [places_with_geonames.get(e) for e in v.get('geonames')]})
+    
+books_json = {k:{ka:va for ka,va in v.items() if ka != 'geonames'} for k,v in books_json.items()}
 
 jsons = {'dh2023_books': books_json,
          'dh2023_people': people_json,
@@ -188,6 +207,7 @@ for k, v in jsons.items():
     with open(f'{k}.json', 'w') as f:
         json.dump(v, f, ensure_ascii=False)
 
+#%% next
 #mapowanie na ontologię --> z PH
 ontology_columns = {'lp', 
                     'creator', 
