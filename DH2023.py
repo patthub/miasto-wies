@@ -89,9 +89,9 @@ for l in range(1, length+1):
 
 books.index = books['id']
 
-literary_epochs = {'DM': 'https://www.wikidata.org/wiki/Q11761904',
-                   'MP': 'https://www.wikidata.org/wiki/Q1133329',
-                   'P': 'https://www.wikidata.org/wiki/Q131015'}
+literary_epochs = {'DM': 'metapnc_e_1572',
+                   'MP': 'metapnc_e_1573',
+                   'P': 'metapnc_e_1574'}
 
 books['epoka'] = books['epoka'].apply(lambda x: literary_epochs.get(x))
 
@@ -174,9 +174,9 @@ places = places.groupby('wikidataId').head(1).reset_index(drop=True)
 places['partition'] = places['geonameId'].apply(lambda x: geo_zabor_dict.get(x))
 places['geonameId'] = places['geonameId'].apply(lambda x: str(x) if x else x)
 
-partition_dict = {'austriacki': 'https://www.wikidata.org/wiki/Q129794', 
-                  'pruski': 'https://www.wikidata.org/wiki/Q129791', 
-                  'rosyjski': 'https://www.wikidata.org/wiki/Q129797'}
+partition_dict = {'austriacki': 'metapnc_z_1569', 
+                  'pruski': 'metapnc_z_1570', 
+                  'rosyjski': 'metapnc_z_1571'}
 
 places['partition'] = places['partition'].apply(lambda x: partition_dict.get(x))
 
@@ -198,6 +198,27 @@ for k,v in books_json.items():
     v.update({'publishing place': [places_with_geonames.get(e) for e in v.get('geonames')]})
     
 books_json = {k:{ka:va for ka,va in v.items() if ka != 'geonames'} for k,v in books_json.items()}
+
+
+partition_dict = {'metapnc_z_1569': {'name': 'Zabór austriacki',
+                                     'wikidata': 'https://www.wikidata.org/wiki/Q129794', 
+                                     'id': 'metapnc_z_1569'},
+                  'metapnc_z_1570': {'name': 'Zabór pruski',
+                                     'wikidata': 'https://www.wikidata.org/wiki/Q129791', 
+                                     'id': 'metapnc_z_1570'},
+                  'metapnc_z_1571': {'name': 'Zabór rosyjski',
+                                     'wikidata': 'https://www.wikidata.org/wiki/Q129797', 
+                                     'id': 'metapnc_z_1571'}}
+
+literary_epochs = {'metapnc_e_1572': {'name': 'Dwudziestolecie międzywojenne', 
+                                      'wikidata': 'https://www.wikidata.org/wiki/Q11761904',
+                                      'id': 'metapnc_e_1572'},
+                   'metapnc_e_1573': {'name': 'Młoda Polska',
+                                      'wikidata': 'https://www.wikidata.org/wiki/Q1133329',
+                                      'id': 'metapnc_e_1573'},
+                   'metapnc_e_1574': {'name': 'Pozytywizm',
+                                      'wikidata': 'https://www.wikidata.org/wiki/Q131015',
+                                      'id': 'metapnc_e_1574'}}
 
 jsons = {'dh2023_books': books_json,
          'dh2023_people': people_json,
