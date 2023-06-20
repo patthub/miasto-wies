@@ -201,7 +201,9 @@ books_json = {k:{ka:va for ka,va in v.items() if ka != 'geonames'} for k,v in bo
 
 jsons = {'dh2023_books': books_json,
          'dh2023_people': people_json,
-         'dh2023_places': places_json}
+         'dh2023_places': places_json,
+         'dh2023_epochs': literary_epochs,
+         'dh2023_partitions': partition_dict}
 
 for k, v in jsons.items():
     with open(f'{k}.json', 'w') as f:
