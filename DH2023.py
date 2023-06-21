@@ -296,33 +296,36 @@ def add_place(place_dict):
     if place_dict['partition']:
         g.add((place, TCO.inPartition, URIRef(TCO+"partition/"+place_dict["partition"])))
 
-def add_book(book_id):
+def add_book(book_dict):
 
-    book = URIRef(TCO + "text/" + book_id)
+    book = URIRef(TCO + "text/" + book_dict['id'])
     
     #g.add((corpus, TCO.?, book) co robi korpus?
     g.add((book, RDF.type, TCO.Text))
     g.add((book, RDF.type, dcterms.BibliographicResource))
-    g.add((book, dcterms.title, Literal(book_id["title"])))
-    g.add((book, dcterms.creator, URIRef(TCO+ "person/" + book_id["creator"])))
-    g.add((book, dcterms.date, Literal(book_id["year"], datatype = XSD.year)))
-    g.add((book, OWL.sameAs, URIRef(eltec_uri + book_id["ELTeC"])))
-    g.add((book, OWL.sameAs, URIRef(polona_uri + book_id["polonaId"])))
-    g.add((book, TCO.inEpoch, URIRef(TCO + "epoch/" + book_id["epoka"])))
-    g.add((book, TCO.numberOfReissues, Literal(book_id["Liczba wznowień"], datatype = XSD.integer)))
-    g.add((book, TCO.numberOfTokens, Literal(book_id["num_tokens"], datatype = XSD.integer)))
-    for place in book_id["publishing place"]:
+    g.add((book, dcterms.title, Literal(book_dict["title"])))
+    g.add((book, dcterms.creator, URIRef(TCO+ "person/" + book_dict["creator"])))
+    g.add((book, dcterms.date, Literal(book_dict["year"], datatype = XSD.year)))
+    if book_dict["ELTeC"] and not isinstance(book_dict["ELTeC"], float):
+        g.add((book, OWL.sameAs, URIRef(eltec_uri + book_dict["ELTeC"])))
+    if book_dict["polonaId"]:
+        g.add((book, OWL.sameAs, URIRef(polona_uri + book_dict["polonaId"])))
+    g.add((book, TCO.inEpoch, URIRef(TCO + "epoch/" + book_dict["epoka"])))
+    g.add((book, TCO.numberOfReissues, Literal(book_dict["liczba wznowień"], datatype = XSD.integer)))
+    g.add((book, TCO.numberOfTokens, Literal(book_dict["num_tokens"], datatype = XSD.integer)))
+    for place in book_dict["publishing place"]:
       g.add((book, bibo.Place, URIRef(TCO + "place/" + place)))
     
-def add_creator(creator_id):
+def add_person(person_dict):
 
-    creator = URIRef(TCO + "creator/"+ creator_id)
+    creator = URIRef(TCO + "creator/"+ person_dict['id'])
     
     #g.add((corpus, TCO.?, book) co robi korpus?
     g.add((creator, RDF.type, FOAF.Person))
-    g.add((creator, FOAF.gender, Literal(creator_id["gender"])))
-    g.add((creator, RDFS.label, Literal(creator_id["name"])))
-    g.add((creator, OWL.sameAs, URIRef(WIKIDATA+creator["wikidata"])))
+    g.add((creator, FOAF.gender, Literal(person_dict["gender"])))
+    g.add((creator, RDFS.label, Literal(person_dict["name"])))
+    if person_dict["wikidata"] and not isinstance(person_dict["wikidata"], float):
+        g.add((creator, OWL.sameAs, URIRef(WIKIDATA+person_dict["wikidata"])))
   
 #graph
 
@@ -340,10 +343,14 @@ for k,v in literary_epochs.items():
     add_epoch(v)
 for k,v in places_json.items():
     add_place(v)
+for k,v in books_json.items():
+    add_book(v)
+for k,v in people_json.items():
+    add_person(v)
 
-print(g.serialize(format='xml'))
+# print(g.serialize(format='xml'))
 
-
+g.serialize("metapnc.ttl", format = "turtle")
 
 
 
