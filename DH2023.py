@@ -81,7 +81,7 @@ df = pd.merge(podkorpus_1000, ostateczna_deduplikacja, on='lp', how='left')
 
 #%% main
 
-books = df[['lp', 'creator', 'title', 'epoka', 'liczba wznowień', 'ELTeC', 'year', 'num_tokens', 'geonames']]
+books = df[['lp', 'creator', 'title', 'epoka', 'liczba wznowień', 'ELTeC', 'year', 'num_tokens', 'geonames', 'pierwodruki_id']]
 
 length = books.shape[0]
 for l in range(1, length+1):
@@ -94,6 +94,8 @@ literary_epochs = {'DM': 'metapnc_e_1572',
                    'P': 'metapnc_e_1574'}
 
 books['epoka'] = books['epoka'].apply(lambda x: literary_epochs.get(x))
+books['polonaId'] = books['pierwodruki_id'].apply(lambda x: x.replace('pl-', '') if isinstance(x,str) and x.startswith('pl-') else None)
+books.drop(columns='pierwodruki_id', inplace=True)
 
 books_json = books.to_dict(orient='index')
 books_json = {k:{ka:[e.get('geonameId') for e in literal_eval(va)] if ka == 'geonames' else va for ka,va in v.items()} for k,v in books_json.items()}
