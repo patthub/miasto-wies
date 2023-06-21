@@ -232,23 +232,147 @@ for k, v in jsons.items():
     with open(f'{k}.json', 'w') as f:
         json.dump(v, f, ensure_ascii=False)
 
-#%% next
-#mapowanie na ontologię --> z PH
-ontology_columns = {'lp', 
-                    'creator', 
-                    'title', 
-                    'gender', 
-                    'zabór', 
-                    'epoka', 
-                    'recepcja',
-                    'ELTeC', 
-                    'pierwodruki_id', 
-                    'year', 
-                    'corpus_id', 
-                    'creator_wikidata',
-                    'geonames', 
-                    'num_tokens', 
-                    'birthplace', 
-                    'birthplace_id',
-                    'birthplace_latitude', 
-                    'birthplace_longitude'}
+#%% ontologia
+#import
+import json
+from rdflib import Graph, Literal, Namespace, URIRef
+from rdflib.namespace import RDF, RDFS, FOAF, XSD, OWL
+#namespaces
+TCO = Namespace("http://purl.org/computations/tco/")
+n = Namespace("http://example.org/people/")
+dcterms = Namespace("http://purl.org/dc/terms/")
+rdf = Namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#")
+book_uri = "http://miastowies.org/item/"
+eltec_uri = "http://distantreading.github.io/ELTeC/pol/"
+polona_uri = "http://polona.pl/item/"
+FABIO = Namespace("http://purl.org/spar/fabio/")
+BIRO = Namespace("http://purl.org/spar/biro/")
+VIAF = Namespace("http://viaf.org/viaf/")
+WIKIDATA = Namespace("http://www.wikidata.org/entity/")
+geo = Namespace("http://www.w3.org/2003/01/geo/wgs84_pos#")
+bibo = Namespace("http://purl.org/ontology/bibo/")
+schema = Namespace("http://schema.org/")
+#def
+def add_partition(partition_dict):
+
+    partition = URIRef(TCO + "partition/" + partition_dict['id'])
+    g.add((partition, RDF.type, dcterms.Location))
+    g.add((partition, RDFS.label, Literal(partition_dict["name"])))
+    g.add((partition, TCO.isPartition, Literal(True)))
+    g.add((partition, OWL.sameAs, URIRef(WIKIDATA+partition_dict["wikidata"])))
+
+
+def add_epoch(epoch_dict):
+
+    epoch = URIRef(TCO + "epoch/" + epoch_dict['id'])
+    g.add((epoch, RDF.type, dcterms.PeriodOfTime))
+    g.add((epoch, RDFS.label, Literal(epoch_dict["name"])))
+    g.add((epoch, TCO.isEpoch, Literal(True)))
+    g.add((epoch, OWL.sameAs, URIRef(WIKIDATA+epoch_dict["wikidata"])))
+
+def add_place(place_dict):
+
+    place = URIRef(TCO + "place/" + place_dict['id'])
+    
+    
+    g.add((place, RDF.type, dcterms.Location))
+    g.add((place, RDFS.label, Literal(place_dict["name"])))
+    
+    ##POINT
+    
+    # Add the triple for latitude
+    latitude = Literal(place_dict["lat"], datatype=XSD.float)
+    g.add((place, geo.lat, latitude))
+    
+    # Add the triple for longitude
+    longitude = Literal(place_dict["lng"], datatype=XSD.float)
+    g.add((place, geo.long, longitude))
+    
+    ##/POINT
+    if place_dict["wikidataId"]:
+        g.add((place, OWL.sameAs, URIRef(WIKIDATA+place_dict["wikidataId"])))
+    if place_dict['geonameId']:
+        g.add((place, OWL.sameAs, URIRef(WIKIDATA+str(place_dict["geonameId"]))))
+    if place_dict['partition']:
+        g.add((place, TCO.inPartition, URIRef(TCO+"partition/"+place_dict["partition"])))
+
+def add_book(book_id):
+
+    book = URIRef(TCO + "text/" + book_id)
+    
+    #g.add((corpus, TCO.?, book) co robi korpus?
+    g.add((book, RDF.type, TCO.Text))
+    g.add((book, RDF.type, dcterms.BibliographicResource))
+    g.add((book, dcterms.title, Literal(book_id["title"])))
+    g.add((book, dcterms.creator, URIRef(TCO+ "person/" + book_id["creator"])))
+    g.add((book, dcterms.date, Literal(book_id["year"], datatype = XSD.year)))
+    g.add((book, OWL.sameAs, URIRef(eltec_uri + book_id["ELTeC"])))
+    g.add((book, OWL.sameAs, URIRef(polona_uri + book_id["polonaId"])))
+    g.add((book, TCO.inEpoch, URIRef(TCO + "epoch/" + book_id["epoka"])))
+    g.add((book, TCO.numberOfReissues, Literal(book_id["Liczba wznowień"], datatype = XSD.integer)))
+    g.add((book, TCO.numberOfTokens, Literal(book_id["num_tokens"], datatype = XSD.integer)))
+    for place in book_id["publishing place"]:
+      g.add((book, bibo.Place, URIRef(TCO + "place/" + place)))
+    
+def add_creator(creator_id):
+
+    creator = URIRef(TCO + "creator/"+ creator_id)
+    
+    #g.add((corpus, TCO.?, book) co robi korpus?
+    g.add((creator, RDF.type, FOAF.Person))
+    g.add((creator, FOAF.gender, Literal(creator_id["gender"])))
+    g.add((creator, RDFS.label, Literal(creator_id["name"])))
+    g.add((creator, OWL.sameAs, URIRef(WIKIDATA+creator["wikidata"])))
+  
+#graph
+
+# Graph instantiation
+g = Graph()
+# Create corpora node
+corpus = URIRef(TCO + "Corpora")
+g.add((corpus, RDF.type, TCO.Corpus))
+g.add((corpus, schema.provider, Literal("Instytut Badań Literackich PAN")))
+
+
+for k,v in partition_dict.items():
+    add_partition(v)
+for k,v in literary_epochs.items():
+    add_epoch(v)
+for k,v in places_json.items():
+    add_place(v)
+
+print(g.serialize(format='xml'))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
