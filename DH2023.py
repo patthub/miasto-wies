@@ -12,6 +12,10 @@ from tqdm import tqdm
 import requests
 import time
 import numpy as np
+import json
+from rdflib import Graph, Literal, Namespace, URIRef
+from rdflib.namespace import RDF, RDFS, FOAF, XSD, OWL
+from glob import glob
 
 #%% def
 def wikidata_simple_dict_resp(results):
@@ -233,10 +237,13 @@ for k, v in jsons.items():
         json.dump(v, f, ensure_ascii=False)
 
 #%% ontologia
-#import
-import json
-from rdflib import Graph, Literal, Namespace, URIRef
-from rdflib.namespace import RDF, RDFS, FOAF, XSD, OWL
+#load json
+files = [f for f in glob('dh*.json', recursive=True)]
+files_dict = {}
+for file in files:
+    name = file.replace('.json', '')
+    with open(file, 'r') as f:
+        files_dict[name] = json.load(f) 
 #namespaces
 TCO = Namespace("http://purl.org/computations/tco/")
 n = Namespace("http://example.org/people/")
@@ -249,30 +256,31 @@ FABIO = Namespace("http://purl.org/spar/fabio/")
 BIRO = Namespace("http://purl.org/spar/biro/")
 VIAF = Namespace("http://viaf.org/viaf/")
 WIKIDATA = Namespace("http://www.wikidata.org/entity/")
+GEONAMES = Namespace("https://www.geonames.org/")
 geo = Namespace("http://www.w3.org/2003/01/geo/wgs84_pos#")
 bibo = Namespace("http://purl.org/ontology/bibo/")
 schema = Namespace("http://schema.org/")
 #def
 def add_partition(partition_dict):
 
-    partition = URIRef(TCO + "partition/" + partition_dict['id'])
+    partition = URIRef(TCO + partition_dict['id'])
     g.add((partition, RDF.type, dcterms.Location))
     g.add((partition, RDFS.label, Literal(partition_dict["name"])))
     g.add((partition, TCO.isPartition, Literal(True)))
-    g.add((partition, OWL.sameAs, URIRef(WIKIDATA+partition_dict["wikidata"])))
+    g.add((partition, OWL.sameAs, URIRef(partition_dict["wikidata"])))
 
 
 def add_epoch(epoch_dict):
 
-    epoch = URIRef(TCO + "epoch/" + epoch_dict['id'])
+    epoch = URIRef(TCO + epoch_dict['id'])
     g.add((epoch, RDF.type, dcterms.PeriodOfTime))
     g.add((epoch, RDFS.label, Literal(epoch_dict["name"])))
     g.add((epoch, TCO.isEpoch, Literal(True)))
-    g.add((epoch, OWL.sameAs, URIRef(WIKIDATA+epoch_dict["wikidata"])))
+    g.add((epoch, OWL.sameAs, URIRef(epoch_dict["wikidata"])))
 
 def add_place(place_dict):
 
-    place = URIRef(TCO + "place/" + place_dict['id'])
+    place = URIRef(TCO + place_dict['id'])
     
     
     g.add((place, RDF.type, dcterms.Location))
@@ -292,9 +300,9 @@ def add_place(place_dict):
     if place_dict["wikidataId"]:
         g.add((place, OWL.sameAs, URIRef(WIKIDATA+place_dict["wikidataId"])))
     if place_dict['geonameId']:
-        g.add((place, OWL.sameAs, URIRef(WIKIDATA+str(place_dict["geonameId"]))))
+        g.add((place, OWL.sameAs, URIRef(GEONAMES+str(place_dict["geonameId"]))))
     if place_dict['partition']:
-        g.add((place, TCO.inPartition, URIRef(TCO+"partition/"+place_dict["partition"])))
+        g.add((place, TCO.inPartition, URIRef(TCO+place_dict["partition"])))
 
 def add_book(book_dict):
 
@@ -304,28 +312,29 @@ def add_book(book_dict):
     g.add((book, RDF.type, TCO.Text))
     g.add((book, RDF.type, dcterms.BibliographicResource))
     g.add((book, dcterms.title, Literal(book_dict["title"])))
-    g.add((book, dcterms.creator, URIRef(TCO+ "person/" + book_dict["creator"])))
+    g.add((book, dcterms.creator, URIRef(TCO + book_dict["creator"])))
     g.add((book, dcterms.date, Literal(book_dict["year"], datatype = XSD.year)))
     if book_dict["ELTeC"] and not isinstance(book_dict["ELTeC"], float):
         g.add((book, OWL.sameAs, URIRef(eltec_uri + book_dict["ELTeC"])))
     if book_dict["polonaId"]:
         g.add((book, OWL.sameAs, URIRef(polona_uri + book_dict["polonaId"])))
-    g.add((book, TCO.inEpoch, URIRef(TCO + "epoch/" + book_dict["epoka"])))
+    # g.add((book, TCO.inEpoch, URIRef(TCO + "epoch/" + book_dict["epoka"])))
+    g.add((book, TCO.inEpoch, URIRef(TCO + book_dict["epoka"])))
     g.add((book, TCO.numberOfReissues, Literal(book_dict["liczba wznowień"], datatype = XSD.integer)))
     g.add((book, TCO.numberOfTokens, Literal(book_dict["num_tokens"], datatype = XSD.integer)))
     for place in book_dict["publishing place"]:
-      g.add((book, bibo.Place, URIRef(TCO + "place/" + place)))
+      g.add((book, bibo.Place, URIRef(TCO + place)))
     
 def add_person(person_dict):
 
-    creator = URIRef(TCO + "creator/"+ person_dict['id'])
+    creator = URIRef(TCO + person_dict['id'])
     
     #g.add((corpus, TCO.?, book) co robi korpus?
     g.add((creator, RDF.type, FOAF.Person))
     g.add((creator, FOAF.gender, Literal(person_dict["gender"])))
     g.add((creator, RDFS.label, Literal(person_dict["name"])))
     if person_dict["wikidata"] and not isinstance(person_dict["wikidata"], float):
-        g.add((creator, OWL.sameAs, URIRef(WIKIDATA+person_dict["wikidata"])))
+        g.add((creator, OWL.sameAs, URIRef(person_dict["wikidata"])))
   
 #graph
 
@@ -337,16 +346,34 @@ g.add((corpus, RDF.type, TCO.Corpus))
 g.add((corpus, schema.provider, Literal("Instytut Badań Literackich PAN")))
 
 
-for k,v in partition_dict.items():
-    add_partition(v)
-for k,v in literary_epochs.items():
-    add_epoch(v)
-for k,v in places_json.items():
-    add_place(v)
-for k,v in books_json.items():
-    add_book(v)
-for k,v in people_json.items():
-    add_person(v)
+for k,v in tqdm(files_dict.items()):
+    if k == 'dh2023_partitions':
+        for ka,va in v.items():
+            add_partition(va)
+    elif k == 'dh2023_epochs':
+        for ka,va in v.items():
+            add_epoch(va)
+    elif k == 'dh2023_places':
+        for ka,va in v.items():
+            add_place(va)
+    elif k == 'dh2023_people':
+        for ka,va in v.items():
+            add_person(va)
+    elif k == 'dh2023_books':
+        for ka,va in v.items():
+            add_book(va)
+
+        
+# for k,v in partition_dict.items():
+#     add_partition(v)
+# for k,v in literary_epochs.items():
+#     add_epoch(v)
+# for k,v in places_json.items():
+#     add_place(v)
+# for k,v in books_json.items():
+#     add_book(v)
+# for k,v in people_json.items():
+#     add_person(v)
 
 # print(g.serialize(format='xml'))
 
