@@ -306,7 +306,7 @@ def add_place(place_dict):
 
 def add_book(book_dict):
 
-    book = URIRef(TCO + "text/" + book_dict['id'])
+    book = URIRef(TCO + book_dict['id'])
     
     #g.add((corpus, TCO.?, book) co robi korpus?
     g.add((book, RDF.type, TCO.Text))
