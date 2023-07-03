@@ -328,7 +328,10 @@ def add_book(book_dict):
     g.add((book, TCO.numberOfReissues, Literal(book_dict["liczba wznowień"], datatype = XSD.integer)))
     g.add((book, TCO.numberOfTokens, Literal(book_dict["num_tokens"], datatype = XSD.integer)))
     for place in book_dict["publishing place"]:
-      g.add((book, bibo.Place, URIRef(TCO + place)))
+        g.add((book, bibo.Place, URIRef(TCO + place)))
+    g.add((book, schema.genre, Literal('Novel')))
+    g.add((book, dcterms.subject, Literal('Plot after the Congress of Vienna')))
+  
     
 def add_person(person_dict):
 
