@@ -82,3 +82,30 @@ print(closest(tempDataList, v))
 
 #print(check_place_status(20.233, 53.844))
 
+
+# test = {k:v for k,v in places_json.items() if not v.get('partition')}
+
+# result = {}
+# for k,v in test.items():
+#     result.update({k: check_place_status(float(v.get('lng')), float(v.get('lat')))})
+    
+# with open('miejsca_urodzenia_zabory.json', 'w') as f:
+#     json.dump(result, f, ensure_ascii=False)
+
+# check_place_status(float('30.31413'), float('59.93863'))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

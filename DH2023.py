@@ -77,6 +77,10 @@ ostateczna_deduplikacja = ostateczna_deduplikacja[['lp', 'creator_wikidata', 'ge
 
 df = pd.merge(podkorpus_1000, ostateczna_deduplikacja, on='lp', how='left')
 
+with open('miejsca_urodzenia_zabory.json', 'r', encoding='utf-8') as f:
+    miejsca_urodzenia_zabory = json.load(f)
+
+
 # korpus_roboczy = korpus_roboczy[['id', 'bn_genre']]
 
 # df = pd.merge(df, korpus_roboczy, left_on='pierwodruki_id', right_on='id', how='left')
@@ -191,6 +195,7 @@ for i, row in places.iterrows():
     places.at[i, 'id'] =  f'metapnc_g_{range(1391, length+1)[i]}'
 
 places.index = places['id']
+places['partition'] = places[['id', 'partition']].apply(lambda x: miejsca_urodzenia_zabory.get(x['id']) if x['partition'] is None else x['partition'], axis=1)
 
 places_json = places.to_dict(orient='index')
 places_json = {k:{ka:int(va) if ka == 'geonameId' and va else va for ka,va in v.items()} for k,v in places_json.items()}

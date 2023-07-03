@@ -1,0 +1,3 @@
+MATCH (p:ns3__Location)-[rel:ns2__Place]-(text:ns1__Text) WHERE p.rdfs__label IN ['Warsaw', 'Chełmno'] RETURN p, text
+MATCH (place:ns3__Location {rdfs__label: "Warsaw"})-[rel:ns2__Place]-(text:ns1__Text) WHERE text.ns1__numberOfReissues >=10 RETURN place, text, text.ns1__numberOfReissues;
+MATCH (p:ns3__Location {rdfs__label: 'Warsaw'}) RETURN p
