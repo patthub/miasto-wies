@@ -1,3 +1,44 @@
 MATCH (p:ns3__Location)-[rel:ns2__Place]-(text:ns1__Text) WHERE p.rdfs__label IN ['Warsaw', 'Chełmno'] RETURN p, text
 MATCH (place:ns3__Location {rdfs__label: "Warsaw"})-[rel:ns2__Place]-(text:ns1__Text) WHERE text.ns1__numberOfReissues >=10 RETURN place, text, text.ns1__numberOfReissues;
 MATCH (p:ns3__Location {rdfs__label: 'Warsaw'}) RETURN p
+MATCH (z:ns3__Location {ns1__isPartition: true})-[:ns1__inPartition]-(p:ns3__Location),
+(p:ns3__Location)-[:ns2__Place]-(t:ns1__Text) 
+WHERE t.ns1__numberOfReissues > 10
+RETURN z, p, t
+
+
+MATCH ksiazka=()-[r:ns2__Place]->(),
+ksiazka2=()-[p:ns3__creator]->(),
+miejsce=()-[q:ns1__inPartition]->()
+RETURN miejsce, ksiazka, ksiazka2
+LIMIT 200
+
+MATCH (ksiazka:ns3__BibliographicResource)-[a:ns2__Place]-(miejsce:ns3__Location),
+(ksiazka:ns3__BibliographicResource)-[b:ns3__creator]-(osoba:ns4__Person)
+//CREATE (osoba)-[c:PUBLISHED_IN]->(miejsce)
+RETURN miejsce, osoba
+LIMIT 100
+
+MATCH (ksiazka:ns3__BibliographicResource)-[a:ns2__Place]-(miejsce:ns3__Location),
+(ksiazka:ns3__BibliographicResource)-[b:ns3__creator]-(osoba:ns4__Person),
+(miejsce:ns3__Location)-[d:ns1__inPartition]-(zabor:ns3__Location)
+//CREATE (osoba)-[c:PUBLISHED_IN]->(miejsce)
+RETURN zabor, osoba
+LIMIT 200
+
+
+#porównanie miejsc urodzenia i miejsc wydania pierwodruków
+MATCH (osoba:ns4__Person)-[r:sch__birthPlace]-(miejsce:ns3__Location),
+(miejsce)-[a:ns1__inPartition]-(zabor:ns3__Location)
+WHERE miejsce.rdfs__label IS NOT NULL
+MERGE (osoba)-[b:BORN_IN]-(zabor)
+
+MATCH (book:ns3__BibliographicResource)-[a:ns3__creator]-(osoba:ns4__Person),
+(book)-[b:ns2__Place]-(miejsce:ns3__Location),
+(miejsce)-[c:ns1__inPartition]-(zabor:ns3__Location)
+MERGE (osoba)-[d:PUBLISHED_ID]-(zabor)
+
+MATCH (osoba:ns4__Person)-[a:BORN_IN]-(zabor:ns3__Location)
+RETURN DISTINCT osoba, zabor
+LIMIT 200
+
