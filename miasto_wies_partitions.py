@@ -63,7 +63,7 @@ for file in tqdm(files):
             
 
 
-
+test = {k:v for k,v in places_json.items() if not v.get('partition')}
 
 
 

@@ -108,7 +108,7 @@ books.drop(columns='pierwodruki_id', inplace=True)
 books_json = books.to_dict(orient='index')
 books_json = {k:{ka:[e.get('geonameId') for e in literal_eval(va)] if ka == 'geonames' else va for ka,va in v.items()} for k,v in books_json.items()}
 
-people = df[['creator', 'gender', 'creator_wikidata']].drop_duplicates().reset_index(drop=True).rename(columns={'creator': 'name', 'creator_wikidata': 'wikidata'})
+people = df[['creator', 'gender', 'creator_wikidata', 'birthplace_id']].drop_duplicates().reset_index(drop=True).rename(columns={'creator': 'name', 'creator_wikidata': 'wikidata', 'birthplace_id': 'birthplace'})
 
 length = people.shape[0] + length
 for i, row in people.iterrows():
@@ -231,6 +231,9 @@ literary_epochs = {'metapnc_e_1572': {'name': 'Dwudziestolecie międzywojenne',
                                       'wikidata': 'https://www.wikidata.org/wiki/Q131015',
                                       'id': 'metapnc_e_1574'}}
 
+places_wikidata = {v.get('wikidataId'):k for k,v in places_json.items() if v.get('wikidataId')}
+people_json = {k:{ka:places_wikidata.get(va) if ka == 'birthplace' and va in places_wikidata else va for ka,va in v.items()} for k,v in people_json.items()}
+
 jsons = {'dh2023_books': books_json,
          'dh2023_people': people_json,
          'dh2023_places': places_json,
@@ -335,14 +338,16 @@ def add_book(book_dict):
     
 def add_person(person_dict):
 
-    creator = URIRef(TCO + person_dict['id'])
+    person = URIRef(TCO + person_dict['id'])
     
     #g.add((corpus, TCO.?, book) co robi korpus?
-    g.add((creator, RDF.type, FOAF.Person))
-    g.add((creator, FOAF.gender, Literal(person_dict["gender"])))
-    g.add((creator, RDFS.label, Literal(person_dict["name"])))
+    g.add((person, RDF.type, FOAF.Person))
+    g.add((person, FOAF.gender, Literal(person_dict["gender"])))
+    g.add((person, RDFS.label, Literal(person_dict["name"])))
     if person_dict["wikidata"] and not isinstance(person_dict["wikidata"], float):
-        g.add((creator, OWL.sameAs, URIRef(person_dict["wikidata"])))
+        g.add((person, OWL.sameAs, URIRef(person_dict["wikidata"])))
+    if person_dict['birthplace'] and not isinstance(person_dict["birthplace"], float):
+        g.add((person, schema.birthPlace, URIRef(TCO+person_dict["birthplace"])))
   
 #graph
 
