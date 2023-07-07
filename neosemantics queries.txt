@@ -42,3 +42,41 @@ MATCH (osoba:ns4__Person)-[a:BORN_IN]-(zabor:ns3__Location)
 RETURN DISTINCT osoba, zabor
 LIMIT 200
 
+
+MATCH (book:ns3__BibliographicResource)-[a:ns2__Place]-(place:ns3__Location),
+(place)-[b:ns1__inPartition]-(zabor:ns3__Location)
+MERGE (book)-[c:BOOK_PUBLISHED_IN]-(zabor)
+
+MATCH (book:ns3__BibliographicResource)-[a:ns2__Place]-(place:ns3__Location),
+(place)-[b:ns1__inPartition]-(zabor:ns3__Location)
+WHERE book.ns3__title = "Mogiła nieznanego żołnierza"
+RETURN book, place, zabor
+
+__
+MATCH (book:ns2__BibliographicResource)-[a:ns3__Place]->(place:ns2__Location),
+(place)-[b:ns1__inPartition]-(zabor:ns2__Location)
+MERGE (place)-[c:PUBLISHED_IN]-(zabor)
+
+MATCH (person:ns4__Person)-[a:sch__birthPlace]-(place:ns2__Location),
+(place)-[b:ns1__inPartition]-(zabor:ns2__Location)
+MERGE (person)-[c:BORN_IN]-(zabor)
+
+MATCH (book:ns2__BibliographicResource)-[a:ns2__creator]-(person:ns4__Person),
+(person)-[b:BORN_IN]-(zabor),
+(book)-[c:PUBLISHED_IN]-(zabor2)
+WHERE zabor <> zabor2
+RETURN book, person, zabor, zabor2
+
+MATCH (book:ns2__BibliographicResource)-[a:ns2__creator]-(person:ns4__Person),
+(person)-[b:BORN_IN]-(zabor),
+(book)-[c:PUBLISHED_IN]-(zabor2)
+WHERE zabor <> zabor2 AND person.rdfs__label = "Ossendowski, Ferdynand Antoni"
+RETURN book, person, zabor, zabor2
+
+
+
+
+
+
+
+

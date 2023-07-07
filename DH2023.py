@@ -103,6 +103,8 @@ literary_epochs = {'DM': 'metapnc_e_1572',
 
 books['epoka'] = books['epoka'].apply(lambda x: literary_epochs.get(x))
 books['polonaId'] = books['pierwodruki_id'].apply(lambda x: x.replace('pl-', '') if isinstance(x,str) and x.startswith('pl-') else None)
+books['wlId'] = books['pierwodruki_id'].apply(lambda x: x.replace('wl-', '') if isinstance(x,str) and x.startswith('wl-') else None)
+books['wsId'] = books['pierwodruki_id'].apply(lambda x: x.replace('ws-', '') if isinstance(x,str) and x.startswith('ws-') else None)
 books.drop(columns='pierwodruki_id', inplace=True)
 
 books_json = books.to_dict(orient='index')
@@ -211,23 +213,23 @@ for k,v in books_json.items():
 books_json = {k:{ka:va for ka,va in v.items() if ka != 'geonames'} for k,v in books_json.items()}
 
 
-partition_dict = {'metapnc_z_1569': {'name': 'Zabór austriacki',
+partition_dict = {'metapnc_z_1569': {'name': 'Austrian Partition',
                                      'wikidata': 'https://www.wikidata.org/wiki/Q129794', 
                                      'id': 'metapnc_z_1569'},
-                  'metapnc_z_1570': {'name': 'Zabór pruski',
+                  'metapnc_z_1570': {'name': 'Prussian Partition',
                                      'wikidata': 'https://www.wikidata.org/wiki/Q129791', 
                                      'id': 'metapnc_z_1570'},
-                  'metapnc_z_1571': {'name': 'Zabór rosyjski',
+                  'metapnc_z_1571': {'name': 'Russian Partition',
                                      'wikidata': 'https://www.wikidata.org/wiki/Q129797', 
                                      'id': 'metapnc_z_1571'}}
 
-literary_epochs = {'metapnc_e_1572': {'name': 'Dwudziestolecie międzywojenne', 
+literary_epochs = {'metapnc_e_1572': {'name': 'Interwar period', 
                                       'wikidata': 'https://www.wikidata.org/wiki/Q11761904',
                                       'id': 'metapnc_e_1572'},
-                   'metapnc_e_1573': {'name': 'Młoda Polska',
+                   'metapnc_e_1573': {'name': 'Young Poland',
                                       'wikidata': 'https://www.wikidata.org/wiki/Q1133329',
                                       'id': 'metapnc_e_1573'},
-                   'metapnc_e_1574': {'name': 'Pozytywizm',
+                   'metapnc_e_1574': {'name': 'Positivism ',
                                       'wikidata': 'https://www.wikidata.org/wiki/Q131015',
                                       'id': 'metapnc_e_1574'}}
 
@@ -260,6 +262,7 @@ rdf = Namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#")
 book_uri = "http://miastowies.org/item/"
 eltec_uri = "http://distantreading.github.io/ELTeC/pol/"
 polona_uri = "http://polona.pl/item/"
+wl_uri = "https://wolnelektury.pl/katalog/lektura/"
 FABIO = Namespace("http://purl.org/spar/fabio/")
 BIRO = Namespace("http://purl.org/spar/biro/")
 VIAF = Namespace("http://viaf.org/viaf/")
@@ -326,6 +329,8 @@ def add_book(book_dict):
         g.add((book, OWL.sameAs, URIRef(eltec_uri + book_dict["ELTeC"])))
     if book_dict["polonaId"]:
         g.add((book, OWL.sameAs, URIRef(polona_uri + book_dict["polonaId"])))
+    if book_dict["wlId"]:
+        g.add((book, OWL.sameAs, URIRef(wl_uri + book_dict["wlId"])))
     # g.add((book, TCO.inEpoch, URIRef(TCO + "epoch/" + book_dict["epoka"])))
     g.add((book, TCO.inEpoch, URIRef(TCO + book_dict["epoka"])))
     g.add((book, TCO.numberOfReissues, Literal(book_dict["liczba wznowień"], datatype = XSD.integer)))
