@@ -79,6 +79,44 @@ df = pd.merge(podkorpus_1000, ostateczna_deduplikacja, on='lp', how='left')
 
 with open('miejsca_urodzenia_zabory.json', 'r', encoding='utf-8') as f:
     miejsca_urodzenia_zabory = json.load(f)
+    
+# ws_ids = pd.read_csv(r'C:/Users/Cezary/Downloads/wl-index.tsv', sep='\t', header=None)
+# ws_ids = dict(zip(ws_ids[0].to_list(), ws_ids[1].to_list()))
+
+ws_ids = {'74179': 'https://pl.wikisource.org/wiki/Ich_dziecko',
+ '85934': 'https://pl.wikisource.org/wiki/Argonauci',
+ '156206': 'https://pl.wikisource.org/wiki/Anastazya',
+ '156637': 'https://pl.wikisource.org/wiki/Pami%C4%99tnik_Wac%C5%82awy',
+ '157130': 'https://pl.wikisource.org/wiki/Ostatnia_mi%C5%82o%C5%9B%C4%87',
+ '222006': 'https://pl.wikisource.org/wiki/Zygmunt_%C5%81awicz_i_jego_koledzy',
+ '286417': 'https://pl.wikisource.org/wiki/Ho%C5%82ota',
+ '326241': 'https://pl.wikisource.org/wiki/Wiry',
+ '327140': 'https://pl.wikisource.org/wiki/Pi%C4%99kna_pani',
+ '327825': 'https://pl.wikisource.org/wiki/Pa%C5%82ac_i_folwark',
+ '339193': 'https://pl.wikisource.org/wiki/Inspektor_Mruczek',
+ '359263': 'https://pl.wikisource.org/wiki/Za_b%C5%82%C4%99kitami_(Weyssenhoff,_1903)',
+ '359335': 'https://pl.wikisource.org/wiki/Nowy_obywatel',
+ '362707': 'https://pl.wikisource.org/wiki/Na_cmentarzu,_na_wulkanie',
+ '366921': 'https://pl.wikisource.org/wiki/As_(Dygasi%C5%84ski)',
+ '367765': 'https://pl.wikisource.org/wiki/Dajmon',
+ '372115': 'https://pl.wikisource.org/wiki/Zamorski_djabe%C5%82',
+ '372407': 'https://pl.wikisource.org/wiki/Dary_wiatru_p%C3%B3%C5%82nocnego',
+ '374788': 'https://pl.wikisource.org/wiki/Pan_Major',
+ '378671': 'https://pl.wikisource.org/wiki/Jutro_(Strug,_1911)',
+ '398085': 'https://pl.wikisource.org/wiki/Ludzie_elektryczni',
+ '398817': 'https://pl.wikisource.org/wiki/W_starym_piecu',
+ '402576': 'https://pl.wikisource.org/wiki/Lenin',
+ '417771': 'https://pl.wikisource.org/wiki/Wsp%C3%B3lny_pok%C3%B3j',
+ '427066': 'https://pl.wikisource.org/wiki/Rajski_ptak_(Bandrowski)',
+ '443771': 'https://pl.wikisource.org/wiki/S%C5%82o%C5%84_Birara',
+ '466801': 'https://pl.wikisource.org/wiki/Noc_majowa_(Kraszewski,_1884)',
+ '466928': 'https://pl.wikisource.org/wiki/Roboty_i_prace',
+ '517282': 'https://pl.wikisource.org/wiki/Emisarjusz',
+ '576679': 'https://pl.wikisource.org/wiki/Pier%C5%9Bcie%C5%84_z_Krwawnikiem',
+ '589580': 'https://pl.wikisource.org/wiki/Moskal',
+ '599027': 'https://pl.wikisource.org/wiki/Rodze%C5%84stwo_(Kraszewski,_1884)',
+ '605247': 'https://pl.wikisource.org/wiki/Przygody_Jurka_w_Afryce',
+ '744856': 'https://pl.wikisource.org/wiki/Sza%C5%82awi%C5%82a'}
 
 
 # korpus_roboczy = korpus_roboczy[['id', 'bn_genre']]
@@ -263,6 +301,7 @@ book_uri = "http://miastowies.org/item/"
 eltec_uri = "http://distantreading.github.io/ELTeC/pol/"
 polona_uri = "http://polona.pl/item/"
 wl_uri = "https://wolnelektury.pl/katalog/lektura/"
+ws_uri = "https://pl.wikisource.org/wiki/"
 FABIO = Namespace("http://purl.org/spar/fabio/")
 BIRO = Namespace("http://purl.org/spar/biro/")
 VIAF = Namespace("http://viaf.org/viaf/")
@@ -331,6 +370,8 @@ def add_book(book_dict):
         g.add((book, OWL.sameAs, URIRef(polona_uri + book_dict["polonaId"])))
     if book_dict["wlId"]:
         g.add((book, OWL.sameAs, URIRef(wl_uri + book_dict["wlId"])))
+    if book_dict["wsId"] and not isinstance(book_dict["wsId"], float):
+        g.add((book, OWL.sameAs, URIRef(ws_ids[book_dict["wsId"]])))
     # g.add((book, TCO.inEpoch, URIRef(TCO + "epoch/" + book_dict["epoka"])))
     g.add((book, TCO.inEpoch, URIRef(TCO + book_dict["epoka"])))
     g.add((book, TCO.numberOfReissues, Literal(book_dict["liczba wznowień"], datatype = XSD.integer)))
