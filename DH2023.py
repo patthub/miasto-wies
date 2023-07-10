@@ -16,6 +16,8 @@ import json
 from rdflib import Graph, Literal, Namespace, URIRef
 from rdflib.namespace import RDF, RDFS, FOAF, XSD, OWL
 from glob import glob
+from datetime import datetime
+
 
 #%% def
 def wikidata_simple_dict_resp(results):
@@ -358,7 +360,7 @@ def add_book(book_dict):
 
     book = URIRef(TCO + book_dict['id'])
     
-    #g.add((corpus, TCO.?, book) co robi korpus?
+    g.add((corpus, TCO.contains, book))
     g.add((book, RDF.type, TCO.Text))
     g.add((book, RDF.type, dcterms.BibliographicResource))
     g.add((book, dcterms.title, Literal(book_dict["title"])))
@@ -380,6 +382,7 @@ def add_book(book_dict):
         g.add((book, bibo.Place, URIRef(TCO + place)))
     g.add((book, schema.genre, Literal('Novel')))
     g.add((book, dcterms.subject, Literal('Plot after the Congress of Vienna')))
+    g.add((book, schema.contentUrl, LINK)
   
     
 def add_person(person_dict):
@@ -403,6 +406,8 @@ g = Graph()
 corpus = URIRef(TCO + "Corpora")
 g.add((corpus, RDF.type, TCO.Corpus))
 g.add((corpus, schema.provider, Literal("Instytut Badań Literackich PAN")))
+g.add((corpus, dcterms.license, URIRef('https://creativecommons.org/licenses/by/4.0/')))
+g.add((corpus, dcterms.created, Literal(datetime.today().strftime('%Y-%m-%d'), datatype=XSD.dateTime)))
 
 
 for k,v in tqdm(files_dict.items()):
