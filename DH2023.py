@@ -121,6 +121,45 @@ ws_ids = {'74179': 'https://pl.wikisource.org/wiki/Ich_dziecko',
  '744856': 'https://pl.wikisource.org/wiki/Sza%C5%82awi%C5%82a'}
 
 
+content_urls = pd.read_csv(r'C:/Users/Cezary/Downloads/content_urls.tsv', sep='\t', header=None)
+content_urls = dict(zip(content_urls[0].to_list(), content_urls[1].to_list()))
+content_urls = {f'pl-{k.split("/")[-1]}' if 'polona' in k else f'wl-{k.split("/")[-1]}' if 'wolnelektury' in k else k:v for k,v in content_urls.items()}
+
+ws_correction1 = ['https://pl.wikisource.org/wiki/Rajski_ptak_(Bandrowski)/Całość',
+'https://pl.wikisource.org/wiki/As_(Dygasi%C5%84ski)/Całość',
+'https://pl.wikisource.org/wiki/Nowy_obywatel/Całość',
+'https://pl.wikisource.org/wiki/Ludzie_elektryczni/Całość',
+'https://pl.wikisource.org/wiki/Dajmon/Całość',
+'https://pl.wikisource.org/wiki/Emisarjusz/Całość',
+'https://pl.wikisource.org/wiki/Moskal/Całość',
+'https://pl.wikisource.org/wiki/Na_cmentarzu,_na_wulkanie/Całość',
+'https://pl.wikisource.org/wiki/Noc_majowa_(Kraszewski,_1884)/Całość',
+'https://pl.wikisource.org/wiki/Pa%C5%82ac_i_folwark/Całość',
+'https://pl.wikisource.org/wiki/Pan_Major/Całość',
+'https://pl.wikisource.org/wiki/Pi%C4%99kna_pani/Całość',
+'https://pl.wikisource.org/wiki/Roboty_i_prace/Całość',
+'https://pl.wikisource.org/wiki/Rodze%C5%84stwo_(Kraszewski,_1884)/Całość',
+'https://pl.wikisource.org/wiki/Sza%C5%82awi%C5%82a/Całość',
+'https://pl.wikisource.org/wiki/W_starym_piecu/Całość',
+'https://pl.wikisource.org/wiki/Argonauci/Całość',
+'https://pl.wikisource.org/wiki/Pami%C4%99tnik_Wac%C5%82awy/Całość',
+'https://pl.wikisource.org/wiki/Lenin/Całość',
+'https://pl.wikisource.org/wiki/Pier%C5%9Bcie%C5%84_z_Krwawnikiem/Całość',
+'https://pl.wikisource.org/wiki/Przygody_Jurka_w_Afryce/Całość',
+'https://pl.wikisource.org/wiki/S%C5%82o%C5%84_Birara/Całość',
+'https://pl.wikisource.org/wiki/Inspektor_Mruczek/Całość',
+'https://pl.wikisource.org/wiki/Wiry/Całość',
+'https://pl.wikisource.org/wiki/Dary_wiatru_p%C3%B3%C5%82nocnego/Całość',
+'https://pl.wikisource.org/wiki/Zamorski_djabe%C5%82/Całość',
+'https://pl.wikisource.org/wiki/Jutro_(Strug,_1911)/Całość',
+'https://pl.wikisource.org/wiki/Wsp%C3%B3lny_pok%C3%B3j/Całość',
+'https://pl.wikisource.org/wiki/Za_b%C5%82%C4%99kitami_(Weyssenhoff,_1903)/Całość']
+
+ws_correction2 = ['https://pl.wikisource.org/wiki/Na_cmentarzu,_na_wulkanie/całość',
+'https://pl.wikisource.org/wiki/Pi%C4%99kna_pani/całość',
+'https://pl.wikisource.org/wiki/Dary_wiatru_p%C3%B3%C5%82nocnego/całość',
+'https://pl.wikisource.org/wiki/Jutro_(Strug,_1911)/całość']
+
 # korpus_roboczy = korpus_roboczy[['id', 'bn_genre']]
 
 # df = pd.merge(df, korpus_roboczy, left_on='pierwodruki_id', right_on='id', how='left')
@@ -145,6 +184,11 @@ books['epoka'] = books['epoka'].apply(lambda x: literary_epochs.get(x))
 books['polonaId'] = books['pierwodruki_id'].apply(lambda x: x.replace('pl-', '') if isinstance(x,str) and x.startswith('pl-') else None)
 books['wlId'] = books['pierwodruki_id'].apply(lambda x: x.replace('wl-', '') if isinstance(x,str) and x.startswith('wl-') else None)
 books['wsId'] = books['pierwodruki_id'].apply(lambda x: x.replace('ws-', '') if isinstance(x,str) and x.startswith('ws-') else None)
+books['download'] = books['pierwodruki_id'].apply(lambda x: content_urls.get(x) if x in content_urls else f"{ws_ids.get(x.replace('ws-',''))}/Całość" if not isinstance(x, float) and 'ws' in x else x)
+books['download'] = books['download'].apply(lambda x: x.replace('/Całość', '/całość') if x in ws_correction1 else x)
+books['download'] = books['download'].apply(lambda x: x.replace('/całość', '') if x in ws_correction2 else x)
+books['download'] = books['download'].apply(lambda x: f'https://distantreading.github.io/ELTeC/pol/{x}.html' if isinstance(x,float) else x)
+
 books.drop(columns='pierwodruki_id', inplace=True)
 
 books_json = books.to_dict(orient='index')
@@ -379,10 +423,10 @@ def add_book(book_dict):
     g.add((book, TCO.numberOfReissues, Literal(book_dict["liczba wznowień"], datatype = XSD.integer)))
     g.add((book, TCO.numberOfTokens, Literal(book_dict["num_tokens"], datatype = XSD.integer)))
     for place in book_dict["publishing place"]:
-        g.add((book, bibo.Place, URIRef(TCO + place)))
+        g.add((book, FABIO.hasPlaceOfPublication, URIRef(TCO + place)))
     g.add((book, schema.genre, Literal('Novel')))
     g.add((book, dcterms.subject, Literal('Plot after the Congress of Vienna')))
-    g.add((book, schema.contentUrl, LINK)
+    g.add((book, schema.contentUrl, URIRef(book_dict['download'])))
   
     
 def add_person(person_dict):
@@ -407,7 +451,7 @@ corpus = URIRef(TCO + "Corpora")
 g.add((corpus, RDF.type, TCO.Corpus))
 g.add((corpus, schema.provider, Literal("Instytut Badań Literackich PAN")))
 g.add((corpus, dcterms.license, URIRef('https://creativecommons.org/licenses/by/4.0/')))
-g.add((corpus, dcterms.created, Literal(datetime.today().strftime('%Y-%m-%d'), datatype=XSD.dateTime)))
+g.add((corpus, dcterms.created, Literal(datetime.today(), datatype=XSD.dateTime)))
 
 
 for k,v in tqdm(files_dict.items()):
