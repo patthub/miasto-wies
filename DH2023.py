@@ -454,6 +454,7 @@ g.bind("geo", geo)
 g.bind("bibo", bibo)
 g.bind("schema", schema)
 g.bind("biro", BIRO)
+g.bind("foaf", FOAF)
 
 # Create corpora node
 corpus = URIRef(TCO + "Corpora")

@@ -53,13 +53,13 @@ WHERE book.ns3__title = "Mogiła nieznanego żołnierza"
 RETURN book, place, zabor
 
 __
-MATCH (book:ns2__BibliographicResource)-[a:ns3__Place]->(place:ns2__Location),
-(place)-[b:ns1__inPartition]-(zabor:ns2__Location)
-MERGE (place)-[c:PUBLISHED_IN]-(zabor)
+MATCH (book:dcterms__BibliographicResource)-[a:fabio__hasPlaceOfPublication]->(place:dcterms__Location),
+(place)-[b:tco__inPartition]-(partition:dcterms__Location)
+MERGE (book)-[c:PUBLISHED_IN]-(partition)
 
-MATCH (person:ns4__Person)-[a:sch__birthPlace]-(place:ns2__Location),
-(place)-[b:ns1__inPartition]-(zabor:ns2__Location)
-MERGE (person)-[c:BORN_IN]-(zabor)
+MATCH (person:ns1__Person)-[a:sch__birthPlace]-(place:dcterms__Location),
+(place)-[b:tco__inPartition]-(partition:dcterms__Location)
+MERGE (person)-[c:BORN_IN]-(partition)
 
 MATCH (book:ns2__BibliographicResource)-[a:ns2__creator]-(person:ns4__Person),
 (person)-[b:BORN_IN]-(zabor),
