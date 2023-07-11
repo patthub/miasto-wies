@@ -446,6 +446,15 @@ def add_person(person_dict):
 
 # Graph instantiation
 g = Graph()
+
+g.bind("tco", TCO)
+g.bind("dcterms", dcterms)
+g.bind("fabio", FABIO)
+g.bind("geo", geo)
+g.bind("bibo", bibo)
+g.bind("schema", schema)
+g.bind("biro", BIRO)
+
 # Create corpora node
 corpus = URIRef(TCO + "Corpora")
 g.add((corpus, RDF.type, TCO.Corpus))
