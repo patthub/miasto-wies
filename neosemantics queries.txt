@@ -57,23 +57,27 @@ MATCH (book:dcterms__BibliographicResource)-[a:fabio__hasPlaceOfPublication]->(p
 (place)-[b:tco__inPartition]-(partition:dcterms__Location)
 MERGE (book)-[c:PUBLISHED_IN]-(partition)
 
-MATCH (person:ns1__Person)-[a:sch__birthPlace]-(place:dcterms__Location),
+MATCH (person:foaf__Person)-[a:sch__birthPlace]-(place:dcterms__Location),
 (place)-[b:tco__inPartition]-(partition:dcterms__Location)
 MERGE (person)-[c:BORN_IN]-(partition)
 
-MATCH (book:ns2__BibliographicResource)-[a:ns2__creator]-(person:ns4__Person),
-(person)-[b:BORN_IN]-(zabor),
-(book)-[c:PUBLISHED_IN]-(zabor2)
-WHERE zabor <> zabor2
-RETURN book, person, zabor, zabor2
+MATCH (book:dcterms__BibliographicResource)-[a:dcterms__creator]-(person:foaf__Person),
+(person)-[b:BORN_IN]-(partition),
+(book)-[c:PUBLISHED_IN]-(partition2)
+WHERE person.rdfs__label = "Ossendowski, Ferdynand Antoni"
+RETURN book, person, partition, partition2
 
-MATCH (book:ns2__BibliographicResource)-[a:ns2__creator]-(person:ns4__Person),
-(person)-[b:BORN_IN]-(zabor),
-(book)-[c:PUBLISHED_IN]-(zabor2)
-WHERE zabor <> zabor2 AND person.rdfs__label = "Ossendowski, Ferdynand Antoni"
-RETURN book, person, zabor, zabor2
+MATCH (book:dcterms__BibliographicResource)-[a:dcterms__creator]-(person:foaf__Person),
+(person)-[b:BORN_IN]-(partition),
+(book)-[c:PUBLISHED_IN]-(partition2)
+WHERE partition <> partition2
+RETURN book, person, partition, partition2
 
-
+MATCH (book:dcterms__BibliographicResource)-[a:dcterms__creator]-(person:foaf__Person),
+(person)-[b:BORN_IN]-(partition),
+(book)-[c:PUBLISHED_IN]-(partition2)
+WHERE partition = partition2
+RETURN book, person, partition, partition2
 
 
 
