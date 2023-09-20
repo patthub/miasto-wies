@@ -61,12 +61,29 @@ df_over = pd.DataFrame().from_dict(result_dict, orient='index')
 df_over.to_excel('data/wl_nadrzedne.xlsx')
 
 
+#%%
+
+df = gsheet_to_df('1t35DbYtJdEUrqhuvRJaOrVZ9HD1qqBfOjfV7R0bJRyE', 'Kopia arkusza WL_over')
+
+df_final = pd.DataFrame()
+for i, row in df.iterrows():
+    # i = 0
+    # row = df.iloc[i, :]
+    class_name = row['klasa']
+    row = row[1:]
+    row = [e for e in row if pd.notnull(e)]
+    df_test = pd.DataFrame(row, columns=['motif'])
+    df_test['class'] = class_name
+    df_final = pd.concat([df_final, df_test])
 
 
+stats = gsheet_to_df('1t35DbYtJdEUrqhuvRJaOrVZ9HD1qqBfOjfV7R0bJRyE', 'Arkusz1')
+stats = stats.loc[stats['topik'].notnull()]
+stats = dict(zip([e.lower().strip() for e in stats['topik'].to_list()], stats['liczba wystąpień']))
 
+df_final['counter'] = df_final['motif'].apply(lambda x: int(stats.get(x.lower().strip(),0)))
 
-
-
+df_final.to_excel('data/wl_final_motifs.xlsx', index=False)
 
 
 
