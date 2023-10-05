@@ -86,6 +86,54 @@ df_final['counter'] = df_final['motif'].apply(lambda x: int(stats.get(x.lower().
 df_final.to_excel('data/wl_final_motifs.xlsx', index=False)
 
 
+#%% crosscheck
+
+wl_original = gsheet_to_df('1t35DbYtJdEUrqhuvRJaOrVZ9HD1qqBfOjfV7R0bJRyE', 'WL_over')
+wl_final = gsheet_to_df('1t35DbYtJdEUrqhuvRJaOrVZ9HD1qqBfOjfV7R0bJRyE', 'Kopia arkusza WL_over')
+
+original_set = set()
+for i, row in wl_original.iterrows():
+    # i = 0
+    # row = df.iloc[i, :]
+    class_name = row['klasa']
+    row = row[1:]
+    [original_set.add(e) for e in row if pd.notnull(e)]
+    
+final_set = set()
+for i, row in wl_final.iterrows():
+    # i = 0
+    # row = df.iloc[i, :]
+    class_name = row['klasa']
+    row = row[1:]
+    [final_set.add(e) for e in row if pd.notnull(e)]
+
+original_not_final = original_set.difference(final_set)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
