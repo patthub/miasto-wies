@@ -12,6 +12,8 @@ import random
 import time
 from datetime import datetime
 import Levenshtein as lev
+from collections import Counter
+import pandas as pd
 
 #%%
 
@@ -58,24 +60,36 @@ for file in tqdm(files):
              
             
 city_sorted = dict(sorted(city_count_total.items(), key=lambda item: item[1], reverse=True))
+df = pd.DataFrame().from_dict(city_sorted, orient='index')
 
 cities_top = {k[-1] for k,v in city_sorted.items() if v > 200}
 cities_all = {k[-1] for k,v in city_sorted.items()}
 cities_rest = [e for e in cities_all if e not in cities_top]
 
-cities_dict = {}
-for e in tqdm(cities_top):
-    for el in cities_rest:
-        if lev.ratio(e, el) > 0.65:
-            cities_dict.setdefault(e, []).append(el)
+# cities_dict = {}
+# for e in tqdm(cities_top):
+#     for el in cities_rest:
+#         if lev.ratio(e, el) > 0.65:
+#             cities_dict.setdefault(e, []).append(el)
 
 
-for k,v in city_sorted.items():
-    print(v)
+# for k,v in city_sorted.items():
+#     print(v)
 
-test = cluster_strings(cities, 0.8)
+# test = cluster_strings(cities, 0.8)
+
+# city_count_per_book_total = {k:sum(v.values()) for k,v in city_count_per_book.items()}
+city_count_per_book_total = {k:len(v.values()) for k,v in city_count_per_book.items()}
+df_city_count_per_book_total = pd.DataFrame().from_dict(city_count_per_book_total, orient='index')
+df_city_count_per_book_total[0].mean()
+df_city_count_per_book_total[0].median()
+df_city_count_per_book_total[0].std()
+df_city_count_per_book_total[0].min()
+df_city_count_per_book_total[0].max()
+df_city_count_per_book_total[0].quantile([.0, .25, .5, .75])
 
 
+dir(df_city_count_per_book_total)
 
 #Nicea
 #Poznan
@@ -85,8 +99,25 @@ test = cluster_strings(cities, 0.8)
 {k:v for k,v in city_count_total.items() if k[-1] == 'Nice'}
 
 
+#%% miejsca publikacji
 
+with open('dh2023_places.json', 'r') as f:
+    miejsca_wydania = json.load(f)
+    
+with open('dh2023_books.json', 'r') as f:
+    books = json.load(f)
 
+miejsca_ogolem = [el for sub in [v.get('publishing place') for k,v in books.items()] for el in sub]
+
+miejsca_wydania_ogolem = {miejsca_wydania.get(k).get('name'):v for k,v in dict(Counter(miejsca_ogolem).most_common(10)).items()}
+
+miejsca_wydania_zabory = {miejsca_wydania.get(k).get('name'):{'counter': v, 'partition': miejsca_wydania.get(k).get('partition')} for k,v in dict(Counter(miejsca_ogolem)).items() if miejsca_wydania.get(k).get('partition')}
+
+russian = dict(sorted({k:v.get('counter') for k,v in miejsca_wydania_zabory.items() if v.get('partition') == 'metapnc_z_1571'}.items(), key=lambda item: item[-1], reverse=True))
+prussian = dict(sorted({k:v.get('counter') for k,v in miejsca_wydania_zabory.items() if v.get('partition') == 'metapnc_z_1570'}.items(), key=lambda item: item[-1], reverse=True))
+austrian = dict(sorted({k:v.get('counter') for k,v in miejsca_wydania_zabory.items() if v.get('partition') == 'metapnc_z_1569'}.items(), key=lambda item: item[-1], reverse=True))
+
+miejsca_wydania_zabory
 
 
 
