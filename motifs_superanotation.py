@@ -83,28 +83,7 @@ for name, group in tqdm(cr_grouped, total=len(cr_grouped)):
         pass
     
 
-dir(cr_grouped)
-cr_grouped.groups
-cr_grouped.values
 
-df = pd.DataFrame()
-for i, row in tqdm(cr_motifs.iterrows(), total = cr_motifs.shape[0]):
-    row = cr_motifs.loc[0,:]
-    match = []
-    from_aka = aka_motifs.loc[(aka_motifs['bookid'] == row['bookid']) &
-                              (aka_motifs['text'] == row['text']) &
-                              (aka_motifs['aka'] == row['cr'])]
-    
-    match.append(from_aka.index.values[0])
-
-df = pd.merge(aka_motifs, cr_motifs, on=['bookid', 'text', 'right_motifs'], how='outer')
-
-
-left_sorted_list = [6, 1, 2, 3, 4, 5]
-right_sorted_list = [[2, 21], [4, 45]]
-
-right_dict = dict(right_sorted_list)
-left_outer_join = [[l, right_dict.get(l)] for l in left_sorted_list] 
 
 
 
